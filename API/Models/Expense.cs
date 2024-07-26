@@ -8,4 +8,5 @@ public class Expense
     public double Amount { get; set; }
     public ExpenseCategory Category { get; set; }
     public DateOnly Date { get; set; }
+    public AppUser? User { get; set; }
 }

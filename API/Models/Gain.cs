@@ -6,4 +6,5 @@ public class Gain
     public double Amount { get; set; }
     public GainCategory Category { get; set; }
     public DateOnly Date { get; set; }
+    public AppUser? User { get; set; }
 }
