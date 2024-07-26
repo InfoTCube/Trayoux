@@ -9,4 +9,7 @@ public class DataContext : IdentityDbContext<AppUser>
     public DataContext(DbContextOptions options) : base(options) {}
 
     protected DataContext() {}
+
+    public DbSet<Expense> Expenses { get; set; }
+    public DbSet<Gain> Gains { get; set; }
 }
