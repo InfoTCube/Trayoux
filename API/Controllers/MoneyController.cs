@@ -1,24 +1,41 @@
 using API.DTOs;
+using API.Interfaces;
+using API.Models;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SQLitePCL;
 
 namespace API.Controllers;
 
 [Authorize]
 public class MoneyController : BaseApiController
 {
-    public MoneyController()
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+    public MoneyController(IUnitOfWork unitOfWork, IMapper mapper)
     {
+        _mapper = mapper;
+        _unitOfWork = unitOfWork;
     }
 
-    [HttpGet("Expenses/{Id}")]
-    public async Task<ActionResult<IEnumerable<ExpenseDto>>> GetExpenseById(int Id)
+    [HttpGet("Expenses/{id}")]
+    public async Task<ActionResult<IEnumerable<ExpenseDto>>> GetExpenseById(int id)
     {
-        return NotFound();
+        Expense expense = await _unitOfWork.MoneyRepository.GetExpenseByIdAsync(id);
+
+        if(expense is null) return NotFound(id);
+
+        if(User?.Identity?.Name == expense?.User?.UserName)
+        {
+            return Ok(_mapper.Map<ExpenseDto>(expense));
+        }
+
+        return Unauthorized();
     }
 
-    [HttpGet("Gains/{Id}")]
-    public async Task<ActionResult<IEnumerable<ExpenseDto>>> GetGainById(int Id)
+    [HttpGet("Gains/{id}")]
+    public async Task<ActionResult<IEnumerable<ExpenseDto>>> GetGainById(int id)
     {
         return NotFound();
     }
@@ -47,14 +64,14 @@ public class MoneyController : BaseApiController
         return NotFound();
     }
 
-    [HttpDelete("Expenses/{Id}")]
-    public async Task<ActionResult> DeleteExpense(int Id)
+    [HttpDelete("Expenses/{id}")]
+    public async Task<ActionResult> DeleteExpense(int id)
     {
         return NoContent();
     }
 
-    [HttpDelete("Gains/{Id}")]
-    public async Task<ActionResult> DeleteGain(int Id)
+    [HttpDelete("Gains/{id}")]
+    public async Task<ActionResult> DeleteGain(int id)
     {
         return NoContent();
     }
