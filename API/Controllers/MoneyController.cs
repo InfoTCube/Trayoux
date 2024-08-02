@@ -44,7 +44,12 @@ public class MoneyController : BaseApiController
     [HttpGet("Expenses")]
     public async Task<ActionResult<IEnumerable<ExpenseDto>>> GetExpenses()
     {
-        return NotFound();
+        string username = User.Identity.Name;
+        IEnumerable<Expense> expenses = await _unitOfWork.MoneyRepository.GetExpensesAsync(username);
+
+        if(expenses.Any() == false) return NotFound();
+
+        return Ok(_mapper.Map<IEnumerable<ExpenseDto>>(expenses));
     }
 
     [HttpGet("Gains")]
@@ -62,10 +67,10 @@ public class MoneyController : BaseApiController
 
         string username = User.Identity.Name;
         AppUser user = await _unitOfWork.UserRepository.GetUserByUsernameAsync(username);
-        foreach(Expense e in expenses)
+        foreach(Expense ex in expenses)
         {
-            e.Date = DateOnly.FromDateTime(DateTime.Now);
-            e.User = user;
+            ex.Date = DateOnly.FromDateTime(DateTime.Now);
+            ex.User = user;
         }
 
         await _unitOfWork.MoneyRepository.AddExpensesAsync(expenses);
@@ -83,7 +88,16 @@ public class MoneyController : BaseApiController
     [HttpDelete("Expenses/{id}")]
     public async Task<ActionResult> DeleteExpense(int id)
     {
-        return NoContent();
+        Expense expense = await _unitOfWork.MoneyRepository.GetExpenseByIdAsync(id);
+        string username = User.Identity.Name;
+
+        if(expense?.User?.UserName != username) return Unauthorized();
+
+        _unitOfWork.MoneyRepository.DeleteExpenseByIdAsync(expense);
+
+        if (await _unitOfWork.Complete()) return Ok();
+
+        return BadRequest("Problem deleting the expense.");
     }
 
     [HttpDelete("Gains/{id}")]

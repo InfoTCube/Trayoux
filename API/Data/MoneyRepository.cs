@@ -19,15 +19,22 @@ public class MoneyRepository : IMoneyRepository
         await _context.Expenses.AddRangeAsync(expenses);
     }
 
+    public void DeleteExpenseByIdAsync(Expense expense)
+    {
+        _context.Expenses.Remove(expense);
+    }
+
     public async Task<Expense> GetExpenseByIdAsync(int id)
     {
         return await _context.Expenses
-            .Where(exp => exp.Id == id).FirstOrDefaultAsync();
+            .Include(ex => ex.User)
+            .Where(ex => ex.Id == id).FirstOrDefaultAsync();
     }
 
     public async Task<IEnumerable<Expense>> GetExpensesAsync(string username)
     {
         return await _context.Expenses
-            .Where(exp => exp.User.UserName == username).ToListAsync();
+            .Include(ex => ex.User)
+            .Where(ex => ex.User.UserName == username).ToListAsync();
     }
 }
