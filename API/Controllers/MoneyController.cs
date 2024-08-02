@@ -116,7 +116,7 @@ public class MoneyController : BaseApiController
 
         if(expense?.User?.UserName != username) return Unauthorized();
 
-        _unitOfWork.MoneyRepository.DeleteExpenseByIdAsync(expense);
+        _unitOfWork.MoneyRepository.DeleteExpenseById(expense);
 
         if (await _unitOfWork.Complete()) return Ok();
 
@@ -131,7 +131,7 @@ public class MoneyController : BaseApiController
 
         if(gain?.User?.UserName != username) return Unauthorized();
 
-        _unitOfWork.MoneyRepository.DeleteGainByIdAsync(gain);
+        _unitOfWork.MoneyRepository.DeleteGainById(gain);
 
         if (await _unitOfWork.Complete()) return Ok();
 
@@ -141,6 +141,17 @@ public class MoneyController : BaseApiController
     [HttpGet]
     public async Task<ActionResult<double>> GetBalance()
     {
-        return NotFound();
+        string username = User.Identity.Name;
+        double balance = await _unitOfWork.MoneyRepository.GetBalanceAsync(username);
+        return Ok(balance);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult> SetBalance(double amount)
+    {
+        string username = User.Identity.Name;
+        await _unitOfWork.MoneyRepository.SetBalanceAsync(amount, username);
+        await _unitOfWork.Complete();
+        return Created();
     }
 }

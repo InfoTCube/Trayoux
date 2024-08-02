@@ -23,14 +23,33 @@ public class MoneyRepository : IMoneyRepository
         await _context.Gains.AddRangeAsync(gains);
     }
 
-    public void DeleteExpenseByIdAsync(Expense expense)
+    public void DeleteExpenseById(Expense expense)
     {
         _context.Expenses.Remove(expense);
     }
 
-    public void DeleteGainByIdAsync(Gain gain)
+    public void DeleteGainById(Gain gain)
     {
         _context.Gains.Remove(gain);
+    }
+
+    public async Task<double> GetBalanceAsync(string username)
+    {
+        AppUser user = await _context.Users
+            .Where(u => u.UserName == username)
+            .FirstOrDefaultAsync();
+
+        double gainSum = await _context.Gains
+            .Include(gn => gn.User)
+            .Where(gn => gn.User.UserName == username)
+            .SumAsync(gn => gn.Amount);
+
+        double expenseSum = await _context.Expenses
+            .Include(ex => ex.User)
+            .Where(ex => ex.User.UserName == username)
+            .SumAsync(ex => ex.Amount);
+
+        return user.Balance + gainSum - expenseSum;
     }
 
     public async Task<Expense> GetExpenseByIdAsync(int id)
@@ -59,5 +78,14 @@ public class MoneyRepository : IMoneyRepository
         return await _context.Gains
             .Include(gn => gn.User)
             .Where(gn => gn.User.UserName == username).ToListAsync();
+    }
+
+    public async Task SetBalanceAsync(double amount, string username)
+    {
+        AppUser user = await _context.Users.Where(u => u.UserName == username).FirstOrDefaultAsync();
+
+        user.Balance = amount;
+
+        _context.Users.Update(user);
     }
 }
