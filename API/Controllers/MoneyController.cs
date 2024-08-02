@@ -1,3 +1,4 @@
+using API.Data;
 using API.DTOs;
 using API.Interfaces;
 using API.Models;
@@ -55,7 +56,22 @@ public class MoneyController : BaseApiController
     [HttpPost("Expenses")]
     public async Task<ActionResult<IEnumerable<NewExpenseDto>>> AddExpenses(IEnumerable<NewExpenseDto> newExpenses)
     {
-        return NotFound();
+        if(newExpenses.Any() == false) return BadRequest("There is nothing to create.");
+
+        IEnumerable<Expense> expenses = _mapper.Map<IEnumerable<Expense>>(newExpenses); 
+
+        string username = User.Identity.Name;
+        AppUser user = await _unitOfWork.UserRepository.GetUserByUsernameAsync(username);
+        foreach(Expense e in expenses)
+        {
+            e.Date = DateOnly.FromDateTime(DateTime.Now);
+            e.User = user;
+        }
+
+        await _unitOfWork.MoneyRepository.AddExpensesAsync(expenses);
+        await _unitOfWork.Complete();
+
+        return Created();
     }
 
     [HttpPost("Gains")]

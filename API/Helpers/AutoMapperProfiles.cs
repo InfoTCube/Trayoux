@@ -13,5 +13,6 @@ public class AutoMapperProfiles : Profile
     public AutoMapperProfiles()
     {
         CreateMap<Expense, ExpenseDto>();
+        CreateMap<NewExpenseDto, Expense>();
     }
 }
