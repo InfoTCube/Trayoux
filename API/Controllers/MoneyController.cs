@@ -1,11 +1,9 @@
-using API.Data;
 using API.DTOs;
 using API.Interfaces;
 using API.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SQLitePCL;
 
 namespace API.Controllers;
 
@@ -38,7 +36,16 @@ public class MoneyController : BaseApiController
     [HttpGet("Gains/{id}")]
     public async Task<ActionResult<IEnumerable<ExpenseDto>>> GetGainById(int id)
     {
-        return NotFound();
+        Gain gain = await _unitOfWork.MoneyRepository.GetGainByIdAsync(id);
+
+        if(gain is null) return NotFound(id);
+
+        if(User?.Identity?.Name == gain?.User?.UserName)
+        {
+            return Ok(_mapper.Map<GainDto>(gain));
+        }
+
+        return Unauthorized();
     }
 
     [HttpGet("Expenses")]
@@ -47,15 +54,16 @@ public class MoneyController : BaseApiController
         string username = User.Identity.Name;
         IEnumerable<Expense> expenses = await _unitOfWork.MoneyRepository.GetExpensesAsync(username);
 
-        if(expenses.Any() == false) return NotFound();
-
         return Ok(_mapper.Map<IEnumerable<ExpenseDto>>(expenses));
     }
 
     [HttpGet("Gains")]
     public async Task<ActionResult<IEnumerable<ExpenseDto>>> GetGains()
     {
-        return NotFound();
+        string username = User.Identity.Name;
+        IEnumerable<Gain> gains = await _unitOfWork.MoneyRepository.GetGainsAsync(username);
+
+        return Ok(_mapper.Map<IEnumerable<GainDto>>(gains));
     }
 
     [HttpPost("Expenses")]
@@ -80,9 +88,24 @@ public class MoneyController : BaseApiController
     }
 
     [HttpPost("Gains")]
-    public async Task<ActionResult<IEnumerable<NewGainDto>>> AddGains(IEnumerable<NewGainDto> newExpenses)
+    public async Task<ActionResult<IEnumerable<NewGainDto>>> AddGains(IEnumerable<NewGainDto> newGains)
     {
-        return NotFound();
+        if(newGains.Any() == false) return BadRequest("There is nothing to create.");
+
+        IEnumerable<Gain> gains = _mapper.Map<IEnumerable<Gain>>(newGains); 
+
+        string username = User.Identity.Name;
+        AppUser user = await _unitOfWork.UserRepository.GetUserByUsernameAsync(username);
+        foreach(Gain gn in gains)
+        {
+            gn.Date = DateOnly.FromDateTime(DateTime.Now);
+            gn.User = user;
+        }
+
+        await _unitOfWork.MoneyRepository.AddGainsAsync(gains);
+        await _unitOfWork.Complete();
+
+        return Created();
     }
 
     [HttpDelete("Expenses/{id}")]
@@ -103,7 +126,16 @@ public class MoneyController : BaseApiController
     [HttpDelete("Gains/{id}")]
     public async Task<ActionResult> DeleteGain(int id)
     {
-        return NoContent();
+        Gain gain = await _unitOfWork.MoneyRepository.GetGainByIdAsync(id);
+        string username = User.Identity.Name;
+
+        if(gain?.User?.UserName != username) return Unauthorized();
+
+        _unitOfWork.MoneyRepository.DeleteGainByIdAsync(gain);
+
+        if (await _unitOfWork.Complete()) return Ok();
+
+        return BadRequest("Problem deleting the gain.");
     }
 
     [HttpGet]

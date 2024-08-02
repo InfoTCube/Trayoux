@@ -1,5 +1,3 @@
-using System.Data;
-
 namespace API.Models;
 
 public class Expense

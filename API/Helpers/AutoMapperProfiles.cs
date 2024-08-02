@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using API.DTOs;
 using API.Models;
 using AutoMapper;
@@ -14,5 +10,7 @@ public class AutoMapperProfiles : Profile
     {
         CreateMap<Expense, ExpenseDto>();
         CreateMap<NewExpenseDto, Expense>();
+        CreateMap<Gain, GainDto>();
+        CreateMap<NewGainDto, Gain>();
     }
 }
