@@ -1,3 +1,4 @@
+using System.Text;
 using API.Data;
 using API.Helpers;
 using API.Interfaces;
@@ -12,8 +13,6 @@ builder.Services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
 
 builder.Services.AddDbContext<DataContext>(opt =>
     opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-
 
 builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<AppUser>()
@@ -30,6 +29,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors(policy => policy.AllowAnyHeader()
+    .AllowAnyMethod()
+    .AllowCredentials()
+    .WithOrigins("http://localhost:5173"));
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapIdentityApi<AppUser>();
 app.MapControllers();

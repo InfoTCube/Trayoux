@@ -5,7 +5,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     const cookies = request.headers.get('cookie') || '';
     const authenticated = cookies.includes('auth');
 
-    const authorizedRoutes = ['/abc'];
+    const authorizedRoutes = ['/overview', '/gains', '/expenses'];
     const unauthorizedRoutes = ['/login', '/signup'];
 
     if (authorizedRoutes.includes(event.url.pathname) && !authenticated) {
