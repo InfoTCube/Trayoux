@@ -1,5 +1,8 @@
 <script lang="ts">
-    export let data: { balance: number };
+    import type { Expense } from "../../models/expense";
+    import type { Gain } from "../../models/gain";
+
+    export let data: { balance: number, gains: Gain[], expenses: Expense[] };
 </script>
 
 <div class="max-w-sm m-5 p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
@@ -18,3 +21,17 @@
         </h1>
     </div>
 </div>
+
+<div class="max-w-sm m-5 p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+    <div class="flex text-white">
+        <ul>
+            {#each data.gains as gain}
+                <li class="text-green-500">{gain.amount} -- {gain.category} -- {gain.date}</li>
+            {/each}
+            {#each data.expenses as expense}
+                <li class="text-red-500">{expense.amount} -- {expense.category} -- {expense.date}</li>
+            {/each}
+        </ul>
+    </div>
+</div>
+
